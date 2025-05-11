@@ -90,24 +90,19 @@ export async function createPkpass(data: BusinessCardData, platform: WalletPlatf
   try {
     const zip = new JSZip();
     
-    // Load SVG assets from public folder
+    // Define SVG assets as inline strings
     const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 58 58"><rect width="58" height="58" rx="10" fill="#4F46E5"/><text x="29" y="36" font-family="Arial" font-size="24" font-weight="bold" fill="white" text-anchor="middle">BC</text></svg>`;
     const logoSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 110"><rect width="180" height="110" rx="10" fill="#4F46E5" fill-opacity="0.8"/><text x="90" y="60" font-family="Arial" font-size="18" font-weight="bold" fill="white" text-anchor="middle">BUSINESS CARD</text></svg>`;
     const stripSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 220"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#4F46E5;stop-opacity:1" /><stop offset="100%" style="stop-color:#3730A3;stop-opacity:1" /></linearGradient></defs><rect width="180" height="220" fill="url(#grad)"/></svg>`;
     const thumbnailSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29"><circle cx="14.5" cy="14.5" r="14.5" fill="#4F46E5"/><text x="14.5" y="19" font-family="Arial" font-size="12" font-weight="bold" fill="white" text-anchor="middle">BC</text></svg>`;
-    
-    
-    const iconSvg = await iconResponse.text();
-    const logoSvg = await logoResponse.text();
-    const stripSvg = await stripResponse.text();
-    const thumbnailSvg = await thumbnailResponse.text();
     
     // Convert SVGs to PNGs
     const iconPng = await svgToPng(iconSvg, 58, 58);
     const logoPng = await svgToPng(logoSvg, 180, 110);
     const stripPng = await svgToPng(stripSvg, 180, 220);
     const thumbnailPng = await svgToPng(thumbnailSvg, 29, 29);
-      // Create pass.json content
+    
+    // Create pass.json content
     const passJson = {
       formatVersion: 1,
       passTypeIdentifier: 'pass.com.example.businesscard', // In production, this would be your Pass Type ID
@@ -174,7 +169,8 @@ export async function createPkpass(data: BusinessCardData, platform: WalletPlatf
     zip.file('logo.png', dataURLToBlob(logoPng));
     zip.file('strip.png', dataURLToBlob(stripPng));
     zip.file('thumbnail.png', dataURLToBlob(thumbnailPng));
-      // Generate manifest with SHA-1 hashes of all files
+    
+    // Generate manifest with SHA-1 hashes of all files
     const manifest: Record<string, string> = {};
     
     manifest['pass.json'] = SHA1(JSON.stringify(passJson, null, 2)).toString();
@@ -190,7 +186,8 @@ export async function createPkpass(data: BusinessCardData, platform: WalletPlatf
     manifest['logo.png'] = SHA1(await new Response(logoBlob).text()).toString();
     manifest['strip.png'] = SHA1(await new Response(stripBlob).text()).toString();
     manifest['thumbnail.png'] = SHA1(await new Response(thumbnailBlob).text()).toString();
-      zip.file('manifest.json', JSON.stringify(manifest, null, 2));
+    
+    zip.file('manifest.json', JSON.stringify(manifest, null, 2));
     
     // In a real implementation, we would add a signature file here
     // But for demo purposes, we'll just add a placeholder
