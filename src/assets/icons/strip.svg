@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="220" viewBox="0 0 180 220" fill="none">
+  <rect width="180" height="220" fill="#4F46E5"/>
+  <path d="M90 60L116.569 75V105L90 120L63.4315 105V75L90 60Z" fill="white"/>
+  <path d="M90 130L116.569 145V175L90 190L63.4315 175V145L90 130Z" fill="white"/>
+  <path d="M135 95L161.569 110V140L135 155L108.431 140V110L135 95Z" fill="white"/>
+  <path d="M45 95L71.5685 110V140L45 155L18.4315 140V110L45 95Z" fill="white"/>
+  <text x="90" y="40" text-anchor="middle" font-family="Arial" font-size="14" fill="white">Digital Business Card</text>
+</svg>

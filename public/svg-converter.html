@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SVG to PNG Converter</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    h1 {
+      color: #4F46E5;
+    }
+    .converter-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .svgs-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    .svg-item {
+      border: 1px solid #ddd;
+      padding: 1rem;
+      border-radius: 0.5rem;
+    }
+    button {
+      background-color: #4F46E5;
+      color: white;
+      border: none;
+      border-radius: 0.25rem;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      cursor: pointer;
+      max-width: 200px;
+    }
+    button:hover {
+      background-color: #3730A3;
+    }
+  </style>
+</head>
+<body>
+  <h1>SVG to PNG Converter</h1>
+  <p>Use this tool to convert the SVG icons to PNG files for the .pkpass creation.</p>
+  
+  <div class="converter-container">
+    <button id="convertButton">Convert SVGs to PNGs</button>
+    <p>This converter will create PNGs for the icon, logo, strip, and thumbnail SVGs in your project.</p>
+  </div>
+  
+  <div class="svgs-container" id="svgsContainer">
+    <!-- SVGs will be loaded here -->
+  </div>
+  
+  <script>
+    // SVG paths relative to this HTML file
+    const svgs = [
+      { name: 'icon', width: 58, height: 58 },
+      { name: 'logo', width: 180, height: 110 },
+      { name: 'strip', width: 180, height: 220 },
+      { name: 'thumbnail', width: 29, height: 29 }
+    ];
+    
+    // Function to load SVG and render it
+    async function loadSVG(name) {
+      try {
+        const response = await fetch(`../src/assets/icons/${name}.svg`);
+        if (!response.ok) {
+          throw new Error(`Failed to load ${name}.svg`);
+        }
+        return await response.text();
+      } catch (error) {
+        console.error(error);
+        return null;
+      }
+    }
+    
+    // Function to convert SVG to PNG
+    function svgToPng(svgContent, width, height) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Failed to get canvas context'));
+            return;
+          }
+          
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/png'));
+        };
+        img.onerror = () => reject(new Error('Failed to load SVG'));
+        
+        // Create a blob URL from the SVG content
+        const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+        img.src = URL.createObjectURL(blob);
+      });
+    }
+    
+    // Function to download PNG
+    function downloadPng(dataUrl, filename) {
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+    
+    // Function to display SVGs
+    async function displaySVGs() {
+      const container = document.getElementById('svgsContainer');
+      
+      for (const svg of svgs) {
+        const svgContent = await loadSVG(svg.name);
+        if (!svgContent) continue;
+        
+        const svgItem = document.createElement('div');
+        svgItem.className = 'svg-item';
+        svgItem.innerHTML = `
+          <h3>${svg.name}.svg</h3>
+          <div>${svgContent}</div>
+          <p>Size: ${svg.width}x${svg.height}</p>
+        `;
+        container.appendChild(svgItem);
+      }
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      displaySVGs();
+      
+      document.getElementById('convertButton').addEventListener('click', async () => {
+        for (const svg of svgs) {
+          const svgContent = await loadSVG(svg.name);
+          if (!svgContent) continue;
+          
+          try {
+            const pngDataUrl = await svgToPng(svgContent, svg.width, svg.height);
+            downloadPng(pngDataUrl, `${svg.name}.png`);
+            console.log(`Converted ${svg.name}.svg to PNG`);
+          } catch (error) {
+            console.error(`Failed to convert ${svg.name}.svg:`, error);
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
