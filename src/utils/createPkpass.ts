@@ -91,10 +91,11 @@ export async function createPkpass(data: BusinessCardData, platform: WalletPlatf
     const zip = new JSZip();
     
     // Load SVG assets from public folder
-    const iconResponse = await fetch('/src/assets/icons/icon.svg');
-    const logoResponse = await fetch('/src/assets/icons/logo.svg');
-    const stripResponse = await fetch('/src/assets/icons/strip.svg');
-    const thumbnailResponse = await fetch('/src/assets/icons/thumbnail.svg');
+    const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 58 58"><rect width="58" height="58" rx="10" fill="#4F46E5"/><text x="29" y="36" font-family="Arial" font-size="24" font-weight="bold" fill="white" text-anchor="middle">BC</text></svg>`;
+    const logoSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 110"><rect width="180" height="110" rx="10" fill="#4F46E5" fill-opacity="0.8"/><text x="90" y="60" font-family="Arial" font-size="18" font-weight="bold" fill="white" text-anchor="middle">BUSINESS CARD</text></svg>`;
+    const stripSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 220"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#4F46E5;stop-opacity:1" /><stop offset="100%" style="stop-color:#3730A3;stop-opacity:1" /></linearGradient></defs><rect width="180" height="220" fill="url(#grad)"/></svg>`;
+    const thumbnailSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29"><circle cx="14.5" cy="14.5" r="14.5" fill="#4F46E5"/><text x="14.5" y="19" font-family="Arial" font-size="12" font-weight="bold" fill="white" text-anchor="middle">BC</text></svg>`;
+    
     
     const iconSvg = await iconResponse.text();
     const logoSvg = await logoResponse.text();
