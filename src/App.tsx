@@ -28,34 +28,21 @@ function App() {
     try {
       const pkpassBlob = await createPkpass(businessCardData, platform);
       
-      // File extension and handling based on platform
+      // File extension based on platform
       let extension = '.pkpass'; // Default for Apple
-      
       if (platform === 'android') {
         extension = '.gpay';
       }
       
       const filename = `${businessCardData.fullName.replace(/\s+/g, '-')}-business-card${extension}`;
       
-      // Check if on mobile
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      
-      // Special handling for iOS devices
-      if (isMobile && platform === 'apple' && /iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-        // On iOS, we need to handle this differently by opening a data URL
-        alert('Your pass will open in a new window. Click "Add to Wallet" when prompted.');
-        
-        // Create a temporary URL for the pass
-        const url = URL.createObjectURL(new Blob([pkpassBlob], { 
-          type: 'application/vnd.apple.pkpass' 
-        }));
-        
-        // Open the URL in a new window
-        window.open(url, '_blank');
-      } else {
-        // Regular download for desktop or Android
-        downloadBlob(pkpassBlob, filename);
+      // For iOS devices, show the alert
+      if (platform === 'apple' && /iPhone|iPad|iPod/.test(navigator.userAgent)) {
+        alert('Your pass will open directly in Safari. Tap "Add to Wallet" when prompted.');
       }
+      
+      // Use the enhanced downloadBlob function which handles iOS differently
+      downloadBlob(pkpassBlob, filename);
     } catch (error) {
       console.error('Error generating wallet card:', error);
       setErrorMessage('Failed to generate wallet card. Please try again.');

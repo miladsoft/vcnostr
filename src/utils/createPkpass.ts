@@ -298,21 +298,66 @@ export async function createPkpass(data: BusinessCardData, platform: WalletPlatf
  */
 export function downloadBlob(blob: Blob, filename: string): void {
   // Set the correct MIME type based on file extension
-  const mimeType = filename.endsWith('.pkpass') 
-    ? 'application/vnd.apple.pkpass' 
-    : 'application/vnd.google.pay.pass-data+json';
+  let mimeType;
   
-  // Create a new blob with the correct MIME type
+  if (filename.endsWith('.pkpass')) {
+    mimeType = 'application/vnd.apple.pkpass';
+  } else if (filename.endsWith('.gpay')) {
+    mimeType = 'application/vnd.google.pay.pass-data+json';
+  } else {
+    mimeType = 'application/octet-stream';
+  }
+  
+  // Create a blob with the correct MIME type
   const blobWithMimeType = new Blob([blob], { type: mimeType });
   
+  // Check if on iOS device
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  
+  if (isIOS && filename.endsWith('.pkpass')) {
+    // For iOS devices, we need to open the file directly rather than downloading it
+    // This approach works better for handling .pkpass files
+    
+    // First create a data URL with the proper MIME type
+    const reader = new FileReader();
+    
+    reader.onload = function() {
+      const dataUrl = reader.result as string;
+      
+      // Create an iframe to handle the file opening (this trick works better on iOS)
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+      
+      // Set a timeout to ensure the iframe is ready
+      setTimeout(() => {
+        if (iframe.contentWindow) {
+          // Navigate the iframe to the data URL
+          iframe.contentWindow.location.href = dataUrl;
+          
+          // Clean up after a delay
+          setTimeout(() => {
+            document.body.removeChild(iframe);
+          }, 5000);
+        } else {
+          // Fallback if iframe approach doesn't work
+          window.location.href = dataUrl;
+        }
+      }, 100);
+    };
+    
+    reader.readAsDataURL(blobWithMimeType);
+    return;
+  }
+  
+  // For non-iOS or non-pkpass files, use standard download approach
   const url = URL.createObjectURL(blobWithMimeType);
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
   
-  // For mobile Safari and some other browsers, we need to use this technique
+  // For mobile Safari and some other browsers
   a.setAttribute('rel', 'noopener noreferrer');
-  a.setAttribute('target', '_blank');
   
   document.body.appendChild(a);
   a.click();
