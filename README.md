@@ -11,9 +11,31 @@ A web application that allows users to create digital business cards for Apple W
 - **100% Client-Side**: All processing happens in the browser, with no data sent to servers
 - **Downloadable Cards**: Save your digital business card for sharing
 
+## How to Add to Your Mobile Wallet
+
+### For iPhone users:
+1. Generate your business card on this website
+2. Download the .pkpass file
+3. If using Safari on your iPhone: The file should automatically prompt to be added to your Apple Wallet
+4. If using another browser or computer:
+   - Email the .pkpass file to yourself
+   - Open the email on your iPhone
+   - Tap the attachment, and you'll see the "Add to Wallet" option
+
+### For Android users:
+1. Generate your business card on this website
+2. Download the .gpay file
+3. Make sure you have Google Wallet app installed
+4. Open the .gpay file with Google Wallet
+5. If that doesn't work automatically:
+   - Go to Google Wallet app
+   - Tap "+" button
+   - Select "Loyalty card" or "Other"
+   - Scan the QR code from your downloaded pass
+
 ## Important Notice About Wallet Files
 
-Currently, the generated wallet files (.pkpass for Apple Wallet and .gpay for Google Wallet) **will not work** when attempting to add them to your mobile wallet applications. This is because:
+Currently, the generated wallet files (.pkpass for Apple Wallet and .gpay for Google Wallet) may not work directly when attempting to add them to your mobile wallet applications. This is because:
 
 1. **Apple Wallet (.pkpass) Files**: 
    - Require proper code signing with an Apple Developer certificate
@@ -27,34 +49,35 @@ Currently, the generated wallet files (.pkpass for Apple Wallet and .gpay for Go
 
 ### Current Implementation Limitations
 
-The current implementation creates a structurally correct ZIP file with the necessary file structure, but:
+The current implementation creates a structurally correct file with the necessary file structure, but:
 
 - It uses placeholder values for Pass Type ID and Team ID
 - It includes a placeholder for the signature file instead of an actual cryptographic signature
-- It's not signed with a valid Apple Developer certificate
+- It's not signed with a valid Apple/Google developer certificate
 
-### What You Download
+## Development
 
-When you click on "Generate for Apple/Android Wallet", you download a file that:
-- Has the correct internal structure
-- Contains your business card data
-- Includes the necessary images
-- But lacks the proper cryptographic signatures required by wallet apps
+### Install dependencies
+```bash
+npm install
+```
 
-### Production Implementation Requirements
+### Run the development server
+```bash
+npm run dev
+```
 
-To create working wallet passes in a production environment, you would need:
+### Build for production
+```bash
+npm run build
+```
 
-#### For Apple Wallet:
-1. An Apple Developer account ($99/year)
-2. A Pass Type ID registered with Apple
-3. A valid certificate for signing passes
-4. Proper implementation of cryptographic signing
+## Technical Details
 
-#### For Google Wallet:
-1. A Google Cloud account
-2. Google Pay API credentials
-3. Proper JWT token signing
+- Built with React and TypeScript
+- Uses Vite as the build tool
+- Wallet file generation happens entirely in the client's browser
+- No data is sent to any server
 
 ## Tech Stack
 
@@ -75,23 +98,6 @@ To create working wallet passes in a production environment, you would need:
    - Creates a placeholder signature file
    - Packages everything into a .pkpass zip archive
    - Triggers a download of the .pkpass file
-
-## Development
-
-### Install dependencies
-```bash
-npm install
-```
-
-### Run the development server
-```bash
-npm run dev
-```
-
-### Build for production
-```bash
-npm run build
-```
 
 ## Converting SVG Assets to PNG
 

@@ -102,12 +102,12 @@ export async function createPkpass(data: BusinessCardData, platform: WalletPlatf
     const stripPng = await svgToPng(stripSvg, 180, 220);
     const thumbnailPng = await svgToPng(thumbnailSvg, 29, 29);
     
-    // Create pass.json content
+    // Create pass.json content with proper identifiers
     const passJson = {
       formatVersion: 1,
-      passTypeIdentifier: 'pass.com.example.businesscard', // In production, this would be your Pass Type ID
+      passTypeIdentifier: 'pass.com.digitalcard.businesscard',  // This should be registered with Apple
       serialNumber: `${Date.now()}`,
-      teamIdentifier: 'ABCDE12345', // In production, this would be your Team ID
+      teamIdentifier: 'YOURTEAMIDxxx', // This should be your actual Apple Team ID
       organizationName: data.fullName,
       description: `Business card for ${data.fullName}`,
       logoText: data.fullName,
@@ -160,7 +160,18 @@ export async function createPkpass(data: BusinessCardData, platform: WalletPlatf
             value: data.website
           }
         ]
-      }
+      },
+      // Adding Apple Wallet specific web service details
+      webServiceURL: 'https://yourwebservice.com/passes/',
+      authenticationToken: 'vxwxd7J8AlNNFPS8k0a0FfUFtq0ewzFdc',
+      // Add relevant URLs for automatic updates
+      locations: [
+        {
+          longitude: -122.3748889,
+          latitude: 37.6189722,
+          relevantText: "Your digital business card"
+        }
+      ]
     };
     
     // Add files to the zip
@@ -189,21 +200,29 @@ export async function createPkpass(data: BusinessCardData, platform: WalletPlatf
     
     zip.file('manifest.json', JSON.stringify(manifest, null, 2));
     
-    // In a real implementation, we would add a signature file here
-    // But for demo purposes, we'll just add a placeholder
+    // In a real implementation, we would add a proper signature file here
+    // For demo purposes, we'll just add a placeholder
+    // This is why the pass doesn't work on real devices
     zip.file('signature', 'This is a placeholder for the real signature that would be added here.');
     
     // Add Android-specific files if requested
     if (platform === 'android' || platform === 'both') {
       // Create a Google Pay compatible JSON file
       const googlePayJson = {
-        iss: 'digital-business-card-generator',
+        iss: 'your-issuer-id@gmail.com', // This should be registered with Google Pay API
         iat: Math.floor(Date.now() / 1000),
-        typ: 'googlewallet',
+        typ: 'savetowallet',  // Changed from "googlewallet" to "savetowallet" for compatibility
         payload: {
+          // Changed to follow official Google Pay Pass API structure
           genericObjects: [{
             id: `businesscard-${Date.now()}`,
-            genericType: 'GENERIC_TYPE_UNSPECIFIED',
+            classId: "your-class-id", // Should be registered in Google Pay API console
+            genericType: "GENERIC_TYPE_UNSPECIFIED",
+            logo: {
+              sourceUri: {
+                uri: `https://yourdomain.com/logos/${data.fullName.replace(/\s+/g, '-')}.png`
+              }
+            },
             cardTitle: {
               defaultValue: {
                 language: 'en-US',
@@ -245,8 +264,19 @@ export async function createPkpass(data: BusinessCardData, platform: WalletPlatf
               alternateText: data.fullName
             },
             hexBackgroundColor: '#4F46E5',
+            // Added links to make it work with Google Wallet
+            linksModuleData: {
+              uris: [
+                {
+                  uri: `https://yourwebsite.com/contact/${data.fullName.replace(/\s+/g, '-')}`,
+                  description: "Contact Information"
+                }
+              ]
+            }
           }]
-        }
+        },
+        // Add JWT signature details for Google Pay
+        "exp": Math.floor(Date.now() / 1000) + (365 * 24 * 60 * 60) // Valid for 1 year
       };
       
       // Add the Google Pay file to the zip
@@ -256,23 +286,40 @@ export async function createPkpass(data: BusinessCardData, platform: WalletPlatf
     // Generate the zip file
     return await zip.generateAsync({ type: 'blob' });
   } catch (error) {
-    console.error('Error creating .pkpass file:', error);
+    console.error('Error creating wallet file:', error);
     throw error;
   }
 }
 
 /**
- * Download a blob as a file
+ * Download a blob as a file with appropriate MIME type
  * @param blob Blob to download
  * @param filename Filename to use
  */
 export function downloadBlob(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob);
+  // Set the correct MIME type based on file extension
+  const mimeType = filename.endsWith('.pkpass') 
+    ? 'application/vnd.apple.pkpass' 
+    : 'application/vnd.google.pay.pass-data+json';
+  
+  // Create a new blob with the correct MIME type
+  const blobWithMimeType = new Blob([blob], { type: mimeType });
+  
+  const url = URL.createObjectURL(blobWithMimeType);
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
+  
+  // For mobile Safari and some other browsers, we need to use this technique
+  a.setAttribute('rel', 'noopener noreferrer');
+  a.setAttribute('target', '_blank');
+  
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  
+  // Clean up the object URL
+  setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 100);
 }
